@@ -26,7 +26,7 @@ import slinky.web.html._
   val status = "Next player: X"
 
   def render = div(
-    (div(className := "status")(status) +: renderRows): _*
+    div(className := "status")(status) +: renderRows: _*
   )
 
   private def renderRows = {
@@ -37,13 +37,13 @@ import slinky.web.html._
       ))
   }
 
-  private def renderSquare(value: Int) =
-    Square()
+  private def renderSquare(squareValue: Int): ReactElement =
+    Square(value = squareValue)
 }
 
 @react class Square extends StatelessComponent {
 
-  type Props = Unit
+  case class Props(value: Int)
 
-  def render(): ReactElement = button(className := "square")
+  def render(): ReactElement = button(className := "square")(props.value.toString)
 }

@@ -5,6 +5,7 @@ name := "slinky-react-tutorial"
 scalaVersion := "2.13.2"
 
 webpackDevServerPort := 8011
+libraryDependencies += "me.shadaj" %% "slinky-core-ijext" % "0.6.5+31-43e32880"
 
 npmDependencies in Compile += "react" -> "16.13.1"
 npmDependencies in Compile += "react-dom" -> "16.13.1"
