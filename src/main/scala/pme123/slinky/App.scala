@@ -2,33 +2,48 @@ package pme123.slinky
 
 import slinky.core._
 import slinky.core.annotations.react
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import scala.scalajs.js
-import scala.scalajs.js.annotation.JSImport
-
-@JSImport("resources/App.css", JSImport.Default)
-@js.native
-object AppCSS extends js.Object
-
-@JSImport("resources/logo.svg", JSImport.Default)
-@js.native
-object ReactLogo extends js.Object
-
-@react class App extends StatelessComponent {
+@react class Game extends StatelessComponent {
   type Props = Unit
 
-  private val css = AppCSS
-
-  def render() = {
-    div(className := "App")(
-      header(className := "App-header")(
-        img(src := ReactLogo.asInstanceOf[String], className := "App-logo", alt := "logo"),
-        h1(className := "App-title")("Welcome to React (with Scala.js!)")
+  def render(): ReactElement =
+    div(className := "game")(
+      div(className := "game-board")(
+        Board()
       ),
-      p(className := "App-intro")(
-        "To get started, edit ", code("App.scala"), " and save to reload."
+      div(className := "game-info")(
+        //div("TODO status")
+        // ol()
       )
     )
+}
+
+@react class Board extends StatelessComponent {
+  type Props = Unit
+
+  val status = "Next player: X"
+
+  def render = div(
+    (div(className := "status")(status) +: renderRows): _*
+  )
+
+  private def renderRows = {
+    (for (r <- 0 to 2)
+      yield div(className := "board-row")(
+        for (c <- 0 to 2)
+          yield renderSquare(r * 3 + c)
+      ))
   }
+
+  private def renderSquare(value: Int) =
+    Square()
+}
+
+@react class Square extends StatelessComponent {
+
+  type Props = Unit
+
+  def render(): ReactElement = button(className := "square")
 }
