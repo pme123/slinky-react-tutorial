@@ -1,8 +1,9 @@
 package pme123.slinky
 
+import org.scalajs.dom.window
 import slinky.core._
 import slinky.core.annotations.react
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{React, ReactElement}
 import slinky.web.html._
 
 @react class Game extends StatelessComponent {
@@ -41,9 +42,17 @@ import slinky.web.html._
     Square(value = squareValue)
 }
 
-@react class Square extends StatelessComponent {
+@react class Square extends Component {
 
   case class Props(value: Int)
+  case class State(value: String)
 
-  def render(): ReactElement = button(className := "square")(props.value.toString)
+  def initialState: State = State("")
+
+  def render(): ReactElement =
+    button(className := "square",
+      onClick := (_ => {
+        setState(State("X"))
+      })) (state.value)
+
 }
