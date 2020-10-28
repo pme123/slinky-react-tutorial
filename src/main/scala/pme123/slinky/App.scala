@@ -24,11 +24,9 @@ import slinky.web.html._
 @react class Board extends Component {
   type Props = Unit
 
-  case class State(squares: Seq[String])
+  case class State(squares: Seq[String],  xIsNext: Boolean)
 
-  def initialState: State = State(List.fill(9)(""))
-
-  val status = "Next player: X"
+  def initialState: State = State(List.fill(9)(""), xIsNext = true)
 
   def render = div(
     div(className := "status")(status) +: renderRows: _*
@@ -43,8 +41,14 @@ import slinky.web.html._
   }
 
   private def handleClick(squareIndex: Int)() {
-    val squares = this.state.squares.updated(squareIndex, "X")
-    this.setState(State(squares))
+    val squares= this.state.squares.updated(squareIndex, nextPlayer)
+    this.setState(State(squares, !state.xIsNext))
+  }
+
+  private def status = s"Next player: $nextPlayer"
+
+  private def nextPlayer = {
+    if (this.state.xIsNext) "X" else "O"
   }
 
   private def renderSquare(squareIndex: Int): ReactElement = {
