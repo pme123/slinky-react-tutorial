@@ -21,8 +21,12 @@ import slinky.web.html._
     )
 }
 
-@react class Board extends StatelessComponent {
+@react class Board extends Component {
   type Props = Unit
+
+  case class State(squares: Seq[String])
+
+  def initialState: State = State(List.fill(9)(""))
 
   val status = "Next player: X"
 
@@ -38,21 +42,25 @@ import slinky.web.html._
       ))
   }
 
-  private def renderSquare(squareValue: Int): ReactElement =
-    Square(value = squareValue)
+  private def handleClick(squareIndex: Int)() {
+    val squares = this.state.squares.updated(squareIndex, "X")
+    this.setState(State(squares))
+  }
+
+  private def renderSquare(squareIndex: Int): ReactElement = {
+    Square(state.squares(squareIndex), handleClick(squareIndex))
+  }
 }
 
-@react class Square extends Component {
+@react class Square extends StatelessComponent {
 
-  case class Props(value: Int)
-  case class State(value: String)
+  case class Props(value: String, onClick: () => ())
 
-  def initialState: State = State("")
 
   def render(): ReactElement =
-    button(className := "square",
-      onClick := (_ => {
-        setState(State("X"))
-      })) (state.value)
+    button(
+      className := "square",
+      onClick := (_ => props.onClick())
+    )(this.props.value)
 
 }
