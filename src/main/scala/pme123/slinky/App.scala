@@ -1,9 +1,8 @@
 package pme123.slinky
 
-import org.scalajs.dom.window
 import slinky.core._
 import slinky.core.annotations.react
-import slinky.core.facade.{React, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 @react class Game extends StatelessComponent {
@@ -24,47 +23,72 @@ import slinky.web.html._
 @react class Board extends Component {
   type Props = Unit
 
-  case class State(squares: Seq[String],  xIsNext: Boolean)
+  case class State(squares: Seq[Option[Char]], xIsNext: Boolean)
 
-  def initialState: State = State(List.fill(9)(""), xIsNext = true)
+  def initialState: State = State(List.fill(9)(None), xIsNext = true)
 
-  def render = div(
+  def render: ReactElement = div(
     div(className := "status")(status) +: renderRows: _*
   )
 
-  private def renderRows = {
-    (for (r <- 0 to 2)
+  private def renderRows =
+    for (r <- 0 to 2)
       yield div(className := "board-row")(
         for (c <- 0 to 2)
           yield renderSquare(r * 3 + c)
-      ))
-  }
+      )
 
   private def handleClick(squareIndex: Int)() {
-    val squares= this.state.squares.updated(squareIndex, nextPlayer)
-    this.setState(State(squares, !state.xIsNext))
+    val existingValue = calculateWinner() orElse this.state.squares(squareIndex)
+    if(existingValue.isEmpty)
+      this.setState(State(this.state.squares.updated(
+        squareIndex,
+        existingValue orElse nextPlayer
+      ), !state.xIsNext))
   }
 
-  private def status = s"Next player: $nextPlayer"
+  private def status =
+    calculateWinner()
+      .map("Winner: " + _)
+      .getOrElse(s"Next player ${nextPlayer.mkString}")
 
   private def nextPlayer = {
-    if (this.state.xIsNext) "X" else "O"
+    Some(if (this.state.xIsNext) 'X' else '0')
   }
 
   private def renderSquare(squareIndex: Int): ReactElement = {
     Square(state.squares(squareIndex), handleClick(squareIndex))
   }
+
+  private def calculateWinner(): Option[Char] = {
+    val lines = List(
+      (0, 1, 2),
+      (3, 4, 5),
+      (6, 7, 8),
+      (0, 3, 6),
+      (1, 4, 7),
+      (2, 5, 8),
+      (0, 4, 8),
+      (2, 4, 6)
+    )
+    val squares = state.squares
+    lines.collectFirst {
+      case (a, b, c)
+        if squares(a).nonEmpty && squares(a) == squares(b) && squares(a) == squares(c) =>
+        squares(a).get
+    }
+  }
+
 }
 
 @react class Square extends StatelessComponent {
 
-  case class Props(value: String, onClick: () => ())
-
+  case class Props(value: Option[Char], onClick: () => ())
 
   def render(): ReactElement =
     button(
       className := "square",
       onClick := (_ => props.onClick())
-    )(this.props.value)
+    )(this.props.value.mkString)
 
 }
