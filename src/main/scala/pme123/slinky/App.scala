@@ -5,62 +5,44 @@ import slinky.core.annotations.react
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-@react class Game extends StatelessComponent {
+@react class Game extends Component {
   type Props = Unit
 
-  def render(): ReactElement =
-    div(className := "game")(
-      div(className := "game-board")(
-        Board()
-      ),
-      div(className := "game-info")(
-        //div("TODO status")
-        // ol()
-      )
-    )
-}
+  case class State(history: Seq[HistoryEntry], xIsNext: Boolean)
 
-@react class Board extends Component {
-  type Props = Unit
+  def initialState: State = State(Seq(HistoryEntry()), xIsNext = true)
 
-  case class State(squares: Seq[Option[Char]], xIsNext: Boolean)
-
-  def initialState: State = State(List.fill(9)(None), xIsNext = true)
-
-  def render: ReactElement = div(
-    div(className := "status")(status) +: renderRows: _*
-  )
-
-  private def renderRows =
-    for (r <- 0 to 2)
-      yield div(className := "board-row")(
-        for (c <- 0 to 2)
-          yield renderSquare(r * 3 + c)
-      )
-
-  private def handleClick(squareIndex: Int)() {
-    val existingValue = calculateWinner() orElse this.state.squares(squareIndex)
-    if(existingValue.isEmpty)
-      this.setState(State(this.state.squares.updated(
+  private def handleClick(squareIndex: Int) {
+    val history: Seq[HistoryEntry] = state.history
+    val current = history.last
+    val existingValue = calculateWinner(current) orElse current.squares(squareIndex)
+    if (existingValue.isEmpty) {
+      val newSquares = HistoryEntry(current.squares.updated(
         squareIndex,
         existingValue orElse nextPlayer
-      ), !state.xIsNext))
+      ))
+      setState(State(history :+ newSquares, !state.xIsNext))
+    }
   }
 
-  private def status =
-    calculateWinner()
+  def render(): ReactElement = {
+    val history = state.history
+    val current = history.last
+    val status = calculateWinner(current)
       .map("Winner: " + _)
       .getOrElse(s"Next player ${nextPlayer.mkString}")
 
-  private def nextPlayer = {
-    Some(if (this.state.xIsNext) 'X' else '0')
+    div(className := "game")(
+      div(className := "game-board")(
+        Board(current.squares, i => handleClick(i))
+      ),
+      div(className := "game-info")(
+        div(className := "status")(status)
+      )
+    )
   }
 
-  private def renderSquare(squareIndex: Int): ReactElement = {
-    Square(state.squares(squareIndex), handleClick(squareIndex))
-  }
-
-  private def calculateWinner(): Option[Char] = {
+  private def calculateWinner(entry: HistoryEntry): Option[Char] = {
     val lines = List(
       (0, 1, 2),
       (3, 4, 5),
@@ -71,13 +53,34 @@ import slinky.web.html._
       (0, 4, 8),
       (2, 4, 6)
     )
-    val squares = state.squares
+    val sq = entry.squares
     lines.collectFirst {
       case (a, b, c)
-        if squares(a).nonEmpty && squares(a) == squares(b) && squares(a) == squares(c) =>
-        squares(a).get
+        if sq(a).nonEmpty && sq(a) == sq(b) && sq(a) == sq(c) =>
+        sq(a).get
     }
   }
+
+  private def nextPlayer = {
+    Some(if (this.state.xIsNext) 'X' else '0')
+  }
+
+}
+
+@react class Board extends StatelessComponent {
+
+  case class Props(squares: Seq[Option[Char]], onClick: Int => ())
+
+  def render: ReactElement = div(
+    for (r <- 0 to 2)
+      yield div(className := "board-row")(
+        for (c <- 0 to 2)
+          yield renderSquare(r * 3 + c)
+      )
+  )
+
+  private def renderSquare(squareIndex: Int): ReactElement =
+    Square(props.squares(squareIndex), () => props.onClick(squareIndex))
 
 }
 
@@ -92,3 +95,5 @@ import slinky.web.html._
     )(this.props.value.mkString)
 
 }
+
+case class HistoryEntry(squares: Seq[Option[Char]] = List.fill(9)(None))
