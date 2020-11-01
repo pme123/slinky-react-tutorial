@@ -73,7 +73,7 @@ import slinky.web.html._
 
   def render: ReactElement = div(
     for (r <- 0 to 2)
-      yield div(className := "board-row")(
+      yield div(key := s"row_$r", className := "board-row")(
         for (c <- 0 to 2)
           yield renderSquare(r * 3 + c)
       )
@@ -81,6 +81,7 @@ import slinky.web.html._
 
   private def renderSquare(squareIndex: Int): ReactElement =
     Square(props.squares(squareIndex), () => props.onClick(squareIndex))
+      .withKey(s"square_$squareIndex")
 
 }
 
