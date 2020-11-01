@@ -8,12 +8,14 @@ import slinky.web.html._
 @react class Game extends Component {
   type Props = Unit
 
-  case class State(history: Seq[HistoryEntry], xIsNext: Boolean)
+  case class State(history: Seq[HistoryEntry],
+                   stepNumber: Int,
+                   xIsNext: Boolean)
 
-  def initialState: State = State(Seq(HistoryEntry()), xIsNext = true)
+  def initialState: State = State(Seq(HistoryEntry()), 0, xIsNext = true)
 
   private def handleClick(squareIndex: Int) {
-    val history: Seq[HistoryEntry] = state.history
+    val history = state.history.take(state.stepNumber + 1)
     val current = history.last
     val existingValue = calculateWinner(current) orElse current.squares(squareIndex)
     if (existingValue.isEmpty) {
@@ -21,18 +23,18 @@ import slinky.web.html._
         squareIndex,
         existingValue orElse nextPlayer
       ))
-      setState(State(history :+ newSquares, !state.xIsNext))
+      setState(State(history :+ newSquares, history.length, !state.xIsNext))
     }
   }
 
   def render(): ReactElement = {
     val history = state.history
-    val current = history.last
+    val current = history(state.stepNumber)
     val moves = history.indices.map(move =>
-      li(
+      li(key := move.toString,
         button(onClick := { () => jumpTo(move) })(
           if (move > 0)
-            "Go to move # " + move
+            s"Go to move # $move"
           else
             "Go to game start"
         )
@@ -54,7 +56,8 @@ import slinky.web.html._
     )
   }
 
-  private def jumpTo(move: Int) = ???
+  private def jumpTo(step: Int): Unit =
+    setState(State(state.history, step, step % 2 == 0))
 
   private def calculateWinner(entry: HistoryEntry): Option[Char] = {
     val lines = List(
@@ -76,7 +79,7 @@ import slinky.web.html._
   }
 
   private def nextPlayer = {
-    Some(if (this.state.xIsNext) 'X' else '0')
+    Some(if (state.xIsNext) 'X' else '0')
   }
 
 }
