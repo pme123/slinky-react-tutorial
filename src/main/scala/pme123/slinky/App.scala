@@ -28,6 +28,17 @@ import slinky.web.html._
   def render(): ReactElement = {
     val history = state.history
     val current = history.last
+    val moves = history.indices.map(move =>
+      li(
+        button(onClick := { () => jumpTo(move) })(
+          if (move > 0)
+            "Go to move # " + move
+          else
+            "Go to game start"
+        )
+      )
+    )
+
     val status = calculateWinner(current)
       .map("Winner: " + _)
       .getOrElse(s"Next player ${nextPlayer.mkString}")
@@ -37,10 +48,13 @@ import slinky.web.html._
         Board(current.squares, i => handleClick(i))
       ),
       div(className := "game-info")(
-        div(className := "status")(status)
+        div(className := "status")(status),
+        ol(moves)
       )
     )
   }
+
+  private def jumpTo(move: Int) = ???
 
   private def calculateWinner(entry: HistoryEntry): Option[Char] = {
     val lines = List(
