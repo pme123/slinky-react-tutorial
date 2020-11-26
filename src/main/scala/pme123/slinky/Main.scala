@@ -23,13 +23,7 @@ object Main {
       hot.initialize()
     }
 
-    val container = Option(dom.document.getElementById("root")).getOrElse {
-      val elem = dom.document.createElement("div")
-      elem.id = "root"
-      dom.document.body.appendChild(elem)
-      elem
-    }
-
-    ReactDOM.render(Game(), container)
+    ReactDOM.render(Game(), dom.document.getElementById("root"))
+    ReactDOM.render(AjaxExample(), dom.document.getElementById("swapi"))
   }
 }

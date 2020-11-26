@@ -20,6 +20,8 @@ npmDevDependencies in Compile += "webpack-merge" -> "4.2.2"
 
 libraryDependencies += "me.shadaj" %%% "slinky-web" % "0.6.5"
 libraryDependencies += "me.shadaj" %%% "slinky-hot" % "0.6.5"
+//ajax call
+libraryDependencies += "com.lihaoyi" %%% "ujson" % "1.2.2"
 
 libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.1" % Test
 

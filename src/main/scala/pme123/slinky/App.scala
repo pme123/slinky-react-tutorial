@@ -46,9 +46,11 @@ import slinky.web.html._
       .getOrElse(s"Next player ${nextPlayer.mkString}")
 
     div(className := "game")(
+      h1("Redux Tutorial's TicTacToe"),
       div(className := "game-board")(
         Board(current.squares, i => handleClick(i))
       ),
+      br(),
       div(className := "game-info")(
         div(className := "status")(status),
         ol(moves)
