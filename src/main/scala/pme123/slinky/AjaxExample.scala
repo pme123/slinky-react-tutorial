@@ -3,29 +3,39 @@ package pme123.slinky
 import org.scalajs.dom.XMLHttpRequest
 import org.scalajs.dom.ext.Ajax
 import slinky.core._
-import slinky.core.annotations.react
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.Fragment
+import slinky.core.facade.Hooks.{useEffect, useState}
 import slinky.web.html._
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.{Failure, Success}
 
-@react class AjaxExample extends Component {
-  type Props = Unit
+object ajax {
 
-  case class State(persons: Seq[SwapiPerson],
-                   error: Option[String],
-                   isLoaded: Boolean)
+  val SwapiPersons: FunctionalComponent[Unit] = FunctionalComponent[Unit] { _ =>
+    val (error, setError) = useState[Option[String]](None)
+    val (isLoaded, setIsLoaded) = useState(false)
+    val (items, setItems) = useState(Seq.empty[SwapiPerson])
 
-  def initialState: State = State(Seq.empty, None, isLoaded = false)
+    // Note: the empty deps array [] means
+    // this useEffect will run once
+    useEffect(() => Ajax.get("https://swapi.dev/api/people/")
+      .onComplete {
+        case Success(xhr: XMLHttpRequest) =>
+          val data = ujson.read(xhr.responseText)
+          val results = data("results").arr.map { r => SwapiPerson(r("name").str, r("url").str) }.toSeq
+          setIsLoaded(true)
+          setItems(results)
+        case Failure(ex) =>
+          setIsLoaded(true)
+          setError(Some(ex.toString))
+      }, Seq.empty)
 
-  override def render(): ReactElement = {
-    val State(items, error, isLoaded) = this.state
     Fragment(
       h1("Star Wars People"),
       (error, isLoaded) match {
-        case (Some(error), _) =>
-          div(s"Error: $error")
+        case (Some(msg), _) =>
+          div(s"Error: $msg")
         case (_, false) =>
           div("Loading...")
         case _ =>
@@ -39,19 +49,6 @@ import scala.util.{Failure, Success}
       }
     )
   }
-
-  override def componentDidMount(): Unit = {
-    Ajax.get("https://swapi.dev/api/people/")
-      .onComplete {
-        case Success(xhr: XMLHttpRequest) =>
-          val data = ujson.read(xhr.responseText)
-          val results = data("results").arr.map { r => SwapiPerson(r("name").str, r("url").str) }.toSeq
-          setState(State(results, None, isLoaded = true))
-        case Failure(ex) =>
-          setState(State(Nil, Some(ex.getMessage), isLoaded = true))
-      }
-  }
-
 }
 
 case class SwapiPerson(name: String, url: String)
